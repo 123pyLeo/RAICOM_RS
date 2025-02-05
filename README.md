@@ -59,8 +59,8 @@ pip install torch torchvision scikit-learn pillow tqdm
 
 ## 使用方法
 1. 准备数据集（按上述结构组织）
-2. 运行Jupyter训练脚本：
-3. 训练完成后会生成模型文件：
+2. 运行Jupyter训练脚本
+3. 训练完成后会生成模型文件
 
 ## 注意事项
 1. 首次运行会自动创建训练集/测试集目录
