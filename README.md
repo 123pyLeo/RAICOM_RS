@@ -1,4 +1,4 @@
-# 睿抗[算法调优] 国家一等奖方案（遥感图像分类）
+# 睿抗算法调优赛道 国一方案（遥感图像分类）
 
 ## 项目描述
 本项目使用PyTorch框架和EfficientNet-B7模型，实现遥感图像的五分类任务（飞机、桥梁、宫殿、船舶、体育场）。包含完整的数据预处理、数据增强、模型训练和保存流程。
@@ -67,6 +67,64 @@ pip install torch torchvision scikit-learn pillow tqdm
 2. 修改`data_dir`路径需同步调整数据集结构
 3. 随机增强参数可能导致不同设备间结果微小差异
 4. 完整训练需要约5GB GPU显存
+
+## 关于蒸馏
+- 在比赛的过程中，由于需要在平台上跑程序并且通过接口测试，所以考虑通过蒸馏来实现小权重，节省本地上传时间
+- b0蒸馏出来的效果不如b7效果好，针对比赛，性能优先，所以最后放弃蒸馏方案
+- 若后续仍希望尝试蒸馏方案以提高`EfficientNet - B0`的性能，使其更接近`EfficientNet - B7`，可尝试以下改进措施：
+
+#### （一）调整蒸馏参数
+蒸馏损失函数中的温度参数`temperature`和权重参数`alpha`对蒸馏效果有重要影响。
+- **温度参数`temperature`**：控制软标签的平滑程度。过高的温度会使软标签过于平滑，导致信息丢失；过低的温度则使软标签接近硬标签，无法充分发挥蒸馏的优势。
+- **权重参数`alpha`**：控制硬损失（交叉熵损失）和软损失的权重分配。不合理的`alpha`设置可能无法充分利用教师模型的知识。
+
+建议通过实验对这两个参数进行调优，找到最优值。示例代码如下：
+```python
+def distillation_loss(student_logits, teacher_logits, labels, temperature=4.0, alpha=0.5):
+    soft_loss = F.kl_div(F.log_softmax(student_logits / temperature, dim=1),
+                         F.softmax(teacher_logits / temperature, dim=1),
+                         reduction='batchmean') * (temperature ** 2)
+    hard_loss = cross_entropy_loss(student_logits, labels)
+    return alpha * hard_loss + (1 - alpha) * soft_loss
+```
+
+#### （二）增加训练轮数
+适当增加训练轮数，让学生模型有更多的时间学习教师模型的知识。由于学生模型需要学习教师模型的知识，特别是在模型架构差异较大的情况下，可能需要更多的训练轮数来收敛。示例代码如下：
+```python
+# 增加训练轮数
+num_epochs = 50
+
+# 训练学生模型
+student_model = train_model(teacher_model, student_model, distillation_loss, optimizer, scheduler, num_epochs=num_epochs)
+```
+
+#### （三）调整学习率
+学习率是影响模型训练的重要因素。尝试不同的学习率和学习率调度策略，如使用`CosineAnnealingLR`，可以提高模型的收敛速度和性能。示例代码如下：
+```python
+from torch.optim.lr_scheduler import CosineAnnealingLR
+optimizer = optim.Adam(student_model.parameters(), lr=0.001)
+scheduler = CosineAnnealingLR(optimizer, T_max=num_epochs)
+```
+
+#### （四）优化数据增强
+训练集的数据增强策略较为复杂，过度增强可能会使训练数据与真实数据的分布差异过大，导致模型学习到一些不相关的特征，影响蒸馏效果。建议简化数据增强策略，确保训练数据与真实数据的分布尽可能接近。示例代码可对原有的`data_transforms`进行简化：
+```python
+# 简化训练集数据增强策略
+data_transforms = {
+    'train': transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ]),
+    'test': transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ]),
+}
+```
 
 ## 参考文献
 - [PyTorch官方文档](https://pytorch.org/docs/stable/index.html)
