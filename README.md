@@ -1,5 +1,4 @@
-## 睿抗机器人开发者大赛(RAICOM)[算法调优] 国家一等奖方案
-# 遥感图像分类 - EfficientNet-B7 实现
+# 睿抗机器人开发者大赛(RAICOM)[算法调优] 国家一等奖方案 遥感图像分类
 
 ## 项目描述
 本项目使用PyTorch框架和EfficientNet-B7模型，实现遥感图像的五分类任务（飞机、桥梁、宫殿、船舶、体育场）。包含完整的数据预处理、数据增强、模型训练和保存流程。
@@ -7,14 +6,14 @@
 ## 数据集准备
 ### 数据集结构
 ```
-yaogan/
+root/
 ├── datasets/
 │   ├── airplane/
 │   ├── bridge/
 │   ├── palace/
 │   ├── ship/
 │   └── stadium/
-└── (自动生成)
+└── train.ipynb
 ```
 
 ### 数据划分
@@ -60,25 +59,8 @@ pip install torch torchvision scikit-learn pillow tqdm
 
 ## 使用方法
 1. 准备数据集（按上述结构组织）
-2. 运行训练脚本：
-```python
-python train.py
-```
+2. 运行Jupyter训练脚本：
 3. 训练完成后会生成模型文件：
-```
-efficientnet_b7_yaogan.pth
-```
-
-## 性能指标
-示例输出（使用Tesla V100）：
-```
-Epoch 24/24
-----------
-100%|██████████| 142/142 [02:18<00:00,  1.02it/s]
-train Loss: 0.1284 Acc: 0.9582
-100%|██████████| 16/16 [00:13<00:00,  1.21it/s]
-test Loss: 0.2107 Acc: 0.9325
-```
 
 ## 注意事项
 1. 首次运行会自动创建训练集/测试集目录
