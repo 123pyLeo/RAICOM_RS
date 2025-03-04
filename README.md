@@ -106,26 +106,6 @@ optimizer = optim.Adam(student_model.parameters(), lr=0.001)
 scheduler = CosineAnnealingLR(optimizer, T_max=num_epochs)
 ```
 
-#### （四）优化数据增强
-训练集的数据增强策略较为复杂，过度增强可能会使训练数据与真实数据的分布差异过大，导致模型学习到一些不相关的特征，影响蒸馏效果。建议简化数据增强策略，确保训练数据与真实数据的分布尽可能接近。示例代码可对原有的`data_transforms`进行简化：
-```python
-# 简化训练集数据增强策略
-data_transforms = {
-    'train': transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-    'test': transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-}
-```
-
 ## 参考文献
 - [PyTorch官方文档](https://pytorch.org/docs/stable/index.html)
 - [EfficientNet论文](https://arxiv.org/abs/1905.11946)
